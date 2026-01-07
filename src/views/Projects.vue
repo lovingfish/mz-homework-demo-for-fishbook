@@ -1,8 +1,9 @@
 <template>
   <div class="container">
-    <h1>项目</h1>
-    <p>编程作业和AI应用项目展示</p>
-
+    <div class="page-header">
+      <h1>项目</h1>
+      <p>编程作业和AI应用项目展示</p>
+    </div>
     <div class="grid">
       <ProjectCard v-for="project in projects" :key="project.id" :project="project" />
     </div>
@@ -62,11 +63,15 @@ const projects = ref([
 </script>
 
 <style scoped>
-h1 {
+.page-header {
+  margin-bottom: 2.5rem;
+}
+
+.page-header h1 {
   margin-bottom: 0.5rem;
 }
 
-p {
-  margin-bottom: 2rem;
+.page-header p {
+  margin: 0;
 }
 </style>

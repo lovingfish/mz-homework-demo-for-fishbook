@@ -1,22 +1,26 @@
 <template>
   <footer class="footer">
-    <div class="container">
-      <p>&copy; 2025 个人博客 - 期末作业</p>
+    <div class="footer-inner">
+      <p>2025 Blog</p>
     </div>
   </footer>
 </template>
 
 <style scoped>
 .footer {
-  background: #f5f5f5;
-  border-top: 1px solid #e0e0e0;
-  padding: 1.5rem 0;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid var(--border);
   text-align: center;
-  color: #999;
-  font-size: 0.9rem;
+}
+
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .footer p {
   margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 </style>
