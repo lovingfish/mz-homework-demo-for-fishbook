@@ -56,7 +56,7 @@ const projects = ref({
     title: 'MQTT聊天室',
     type: 'web-app',
     description: '实时聊天应用，基于MQTT协议实现。支持实时消息收发、在线用户列表、系统通知等功能。',
-    path: '/projects/03-mqtt-chat/index.html',
+    path: 'projects/03-mqtt-chat/index.html',
     iframe: true,
     tech: ['HTML/CSS/JS', 'MQTT.js']
   },
@@ -65,7 +65,7 @@ const projects = ref({
     title: '太阳系动态星图',
     type: '3d-viz',
     description: '使用Three.js实现的3D太阳系可视化。包含太阳和6大行星，支持公转自转动画、鼠标交互、速度控制等功能。',
-    path: '/projects/04-solar-system/index.html',
+    path: 'projects/04-solar-system/index.html',
     iframe: true,
     tech: ['Three.js', 'JavaScript']
   },
@@ -74,7 +74,7 @@ const projects = ref({
     title: 'AI梗图展示',
     type: 'gallery',
     description: 'AI生成的趣味图片轮播展示。支持点击切换、键盘控制、触摸滑动、鼠标拖动等多种交互方式。',
-    path: '/projects/ai-images-site/index.html',
+    path: 'projects/ai-images-site/index.html',
     iframe: true,
     tech: ['HTML/CSS/JS']
   },

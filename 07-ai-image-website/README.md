@@ -69,7 +69,7 @@ python -m http.server 8000
 
 ### 接入博客
 
-将此网站整合到博客的 `/projects/ai-images-site/` 路径下。
+将此网站整合到博客的 `./projects/ai-images-site/` 路径下。
 
 #### 方式一: iframe 嵌入（推荐）
 
@@ -78,7 +78,7 @@ python -m http.server 8000
 <div class="project-showcase">
   <h1>AI 梗图展示</h1>
   <iframe
-    src="/projects/ai-images-site/index.html"
+    src="./projects/ai-images-site/index.html"
     width="100%"
     height="800px"
     frameborder="0">
@@ -90,7 +90,7 @@ python -m http.server 8000
 
 将整个文件夹复制到博客目录:
 ```bash
-cp -r 07-ai-image-website/* blog/projects/ai-images-site/
+cp -r 07-ai-image-website/* blog/public/projects/ai-images-site/
 ```
 
 ### 路径配置

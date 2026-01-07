@@ -71,14 +71,14 @@ npm run dev
 
 ### 接入博客
 
-博客将在 `/projects/03-mqtt-chat/index.html` 路径下嵌入本应用。
+博客将在 `./projects/03-mqtt-chat/index.html` 路径下嵌入本应用。
 
 **方式一: iframe 嵌入**
 
 ```html
 <!-- 博客页面 -->
 <iframe
-  src="/projects/03-mqtt-chat/index.html"
+  src="./projects/03-mqtt-chat/index.html"
   width="100%"
   height="600px"
   frameborder="0">

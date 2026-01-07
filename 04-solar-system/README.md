@@ -64,13 +64,13 @@ npm run dev
 
 ### 接入博客
 
-博客将在 `/projects/04-solar-system/index.html` 路径下展示。
+博客将在 `./projects/04-solar-system/index.html` 路径下展示。
 
 **方式一: 全屏子页面**
 
 ```html
 <!-- 博客页面链接 -->
-<a href="/projects/04-solar-system/index.html" target="_blank">
+<a href="./projects/04-solar-system/index.html" target="_blank">
   查看太阳系星图 →
 </a>
 ```
@@ -79,7 +79,7 @@ npm run dev
 
 ```html
 <iframe
-  src="/projects/04-solar-system/index.html"
+  src="./projects/04-solar-system/index.html"
   width="100%"
   height="600px"
   frameborder="0">
