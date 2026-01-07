@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 梗图展示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        /* 相册容器 */
+        .gallery-container {
+            background: #f9f9f9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .gallery-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background: #ffffff;
+            aspect-ratio: 16 / 9;
+        }
+
+        .gallery-slide {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            height: 100%;
+        }
+
+        .gallery-item {
+            min-width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #ffffff;
+            padding: 40px;
+            height: 100%;
+        }
+
+        .gallery-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        /* 导航按钮 */
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.04);
+            color: #1a1a1a;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 1.2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s ease;
+            z-index: 10;
+            font-weight: 600;
+        }
+
+        .nav-button:hover {
+            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.12);
+        }
+
+        .nav-button:active {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        .nav-button.prev {
+            left: 20px;
+        }
+
+        .nav-button.next {
+            right: 20px;
+        }
+
+        /* 底部信息栏 */
+        .gallery-footer {
+            background: #ffffff;
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .image-info {
+            flex: 1;
+        }
+
+        .image-title {
+            font-size: 1.1rem;
+            color: #1a1a1a;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .image-counter {
+            font-size: 0.85rem;
+            color: #999;
+            font-weight: 400;
+        }
+
+        /* 指示器 */
+        .indicators {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.12);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            padding: 0;
+        }
+
+        .indicator:hover {
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .indicator.active {
+            background: #1a1a1a;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        /* 提示文字 */
+        .hint {
+            text-align: right;
+            flex: 1;
+            font-size: 0.8rem;
+            color: #999;
+            font-weight: 400;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .gallery-wrapper {
+                aspect-ratio: 4 / 3;
+            }
+
+            .gallery-item {
+                padding: 20px;
+            }
+
+            .nav-button {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .nav-button.prev {
+                left: 12px;
+            }
+
+            .nav-button.next {
+                right: 12px;
+            }
+
+            .gallery-footer {
+                padding: 16px 20px;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .image-info {
+                width: 100%;
+                text-align: center;
+            }
+
+            .indicators {
+                width: 100%;
+            }
+
+            .hint {
+                text-align: center;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+
+            .gallery-wrapper {
+                aspect-ratio: 1;
+            }
+
+            .gallery-item {
+                padding: 15px;
+            }
+
+            .nav-button {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+
+            .gallery-footer {
+                padding: 12px 16px;
+            }
+
+            .image-title {
+                font-size: 1rem;
+            }
+
+            .image-counter {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* 禁用文本选择 */
+        .gallery-wrapper {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI 梗图展示</h1>
+            <p>期末作业</p>
+        </div>
+
+        <div class="gallery-container">
+            <div class="gallery-wrapper">
+                <div class="gallery-slide" id="gallerySlide">
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/12/gemini" alt="Gemini">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/11/claude" alt="Claude">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/11/lapwing-codex" alt="Codex">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/11/DeepSeek" alt="DeepSeek">
+                    </div>
+                </div>
+
+                <button class="nav-button prev" id="prevBtn">‹</button>
+                <button class="nav-button next" id="nextBtn">›</button>
+            </div>
+
+            <div class="gallery-footer">
+                <div class="image-info">
+                    <div class="image-title" id="imageTitle">Gemini</div>
+                    <div class="image-counter"><span id="currentIndex">1</span> / <span id="totalImages">4</span></div>
+                </div>
+                <div class="indicators" id="indicators"></div>
+                <div class="hint">← → 或滑动</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gallerySlide = document.getElementById('gallerySlide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const indicatorsContainer = document.getElementById('indicators');
+        const imageTitle = document.getElementById('imageTitle');
+        const currentIndexSpan = document.getElementById('currentIndex');
+        const totalImagesSpan = document.getElementById('totalImages');
+
+        const images = [
+            { title: 'Gemini' },
+            { title: 'Claude' },
+            { title: 'Codex' },
+            { title: 'DeepSeek' }
+        ];
+
+        let currentIndex = 0;
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        // 初始化指示器
+        function initIndicators() {
+            images.forEach((_, index) => {
+                const indicator = document.createElement('button');
+                indicator.className = 'indicator' + (index === 0 ? ' active' : '');
+                indicator.addEventListener('click', () => goToSlide(index));
+                indicatorsContainer.appendChild(indicator);
+            });
+            totalImagesSpan.textContent = images.length;
+        }
+
+        // 更新指示器
+        function updateIndicators() {
+            document.querySelectorAll('.indicator').forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentIndex);
+            });
+        }
+
+        // 更新图片信息
+        function updateImageInfo() {
+            imageTitle.textContent = images[currentIndex].title;
+            currentIndexSpan.textContent = currentIndex + 1;
+        }
+
+        // 移动到指定幻灯片
+        function goToSlide(index) {
+            currentIndex = index;
+            const offset = -currentIndex * 100;
+            gallerySlide.style.transform = `translateX(${offset}%)`;
+
+            updateIndicators();
+            updateImageInfo();
+        }
+
+        // 下一张
+        function nextSlide() {
+            goToSlide((currentIndex + 1) % images.length);
+        }
+
+        // 上一张
+        function prevSlide() {
+            goToSlide((currentIndex - 1 + images.length) % images.length);
+        }
+
+        // 事件监听
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+
+        // 键盘事件
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // 触摸事件
+        gallerySlide.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+
+        gallerySlide.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+
+        // 处理滑动
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }
+
+        // 鼠标拖动支持
+        let isMouseDown = false;
+        let mouseStartX = 0;
+
+        gallerySlide.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            mouseStartX = e.clientX;
+            gallerySlide.style.cursor = 'grab';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            const diff = mouseStartX - e.clientX;
+            if (Math.abs(diff) > 50) {
+                isMouseDown = false;
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isMouseDown = false;
+        });
+
+        // 初始化
+        initIndicators();
+        updateImageInfo();
+    </script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>太阳系动态星图</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      background: #0a0a1a;
+    }
+
+    /* 3D 场景容器 */
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a1a 100%);
+    }
+
+    /* 通用面板样式 */
+    .panel {
+      position: fixed;
+      background: rgba(20, 25, 40, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      color: #ffffff;
+      z-index: 100;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 信息面板 */
+    #info-panel {
+      top: 20px;
+      left: 20px;
+      width: 280px;
+      padding: 20px;
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+      pointer-events: none;
+    }
+
+    #info-panel.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    #info-panel h2 {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #info-panel .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 12px 0;
+    }
+
+    #info-panel .info-item {
+      display: flex;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    #info-panel .info-label {
+      color: rgba(255, 255, 255, 0.5);
+      margin-right: 8px;
+      min-width: 80px;
+    }
+
+    #info-panel .info-value {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    #info-panel .info-desc {
+      margin-top: 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* 关闭按钮 */
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* 控制栏 */
+    #control-bar {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: all 0.2s;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .control-btn:active {
+      transform: scale(0.95);
+    }
+
+    .control-btn.active {
+      background: rgba(79, 195, 247, 0.3);
+      color: #4fc3f7;
+    }
+
+    /* 速度指示器 */
+    #speed-indicator {
+      background: rgba(79, 195, 247, 0.2);
+      color: #4fc3f7;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* 提示信息 */
+    #hint {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 13px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      #info-panel {
+        width: calc(100% - 40px);
+        top: 10px;
+        left: 20px;
+      }
+
+      #control-bar {
+        padding: 8px 16px;
+      }
+
+      .control-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 3D 场景容器 -->
+  <div id="canvas-container"></div>
+
+  <!-- 信息面板 -->
+  <div id="info-panel" class="panel">
+    <button class="close-btn" onclick="closeInfoPanel()">&times;</button>
+    <h2 id="planet-name"><span id="planet-icon">🌍</span> 地球</h2>
+    <div class="divider"></div>
+    <div class="info-item">
+      <span class="info-label">📊 距离太阳</span>
+      <span class="info-value" id="planet-distance">1 AU</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">🔄 公转周期</span>
+      <span class="info-value" id="planet-period">365.25天</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">🌡️ 表面温度</span>
+      <span class="info-value" id="planet-temp">15°C</span>
+    </div>
+    <div class="info-desc" id="planet-desc">
+      我们居住的蓝色星球,唯一的生命家园
+    </div>
+  </div>
+
+  <!-- 控制栏 -->
+  <div id="control-bar" class="panel">
+    <button class="control-btn" id="btn-pause" onclick="togglePause()" title="暂停/播放">⏸</button>
+    <button class="control-btn" onclick="changeSpeed(0.5)" title="减速">⏪</button>
+    <button class="control-btn" onclick="changeSpeed(2)" title="加速">⏩</button>
+    <button class="control-btn" id="btn-orbit" onclick="toggleOrbits()" title="显示/隐藏轨道">👁</button>
+    <button class="control-btn" onclick="resetCamera()" title="重置视角">🎯</button>
+    <div id="speed-indicator">速度: 1.0x</div>
+  </div>
+
+  <!-- 提示 -->
+  <div id="hint">拖拽旋转视角 · 滚轮缩放 · 点击行星查看详情</div>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+  <script>
+    // 行星数据
+    const planetsData = [
+      {
+        name: "太阳",
+        icon: "☀️",
+        radius: 5,
+        distance: 0,
+        color: 0xffd54f,
+        speed: 0,
+        rotationSpeed: 0.001,
+        info: {
+          distance: "0 AU",
+          period: "自转约25天",
+          temp: "5,500°C",
+          desc: "太阳系的中心恒星,占太阳系总质量的99.86%"
+        }
+      },
+      {
+        name: "水星",
+        icon: "⚫",
+        radius: 0.8,
+        distance: 10,
+        color: 0x999999,
+        speed: 0.04,
+        rotationSpeed: 0.005,
+        info: {
+          distance: "0.39 AU",
+          period: "88天",
+          temp: "167°C",
+          desc: "太阳系最小、最内侧的行星"
+        }
+      },
+      {
+        name: "金星",
+        icon: "🟡",
+        radius: 1.2,
+        distance: 15,
+        color: 0xffcc80,
+        speed: 0.03,
+        rotationSpeed: 0.003,
+        info: {
+          distance: "0.72 AU",
+          period: "225天",
+          temp: "464°C",
+          desc: "最亮的行星,有浓厚大气层"
+        }
+      },
+      {
+        name: "地球",
+        icon: "🌍",
+        radius: 1.3,
+        distance: 20,
+        color: 0x4fc3f7,
+        speed: 0.02,
+        rotationSpeed: 0.02,
+        info: {
+          distance: "1 AU",
+          period: "365.25天",
+          temp: "15°C",
+          desc: "我们居住的蓝色星球,唯一的生命家园"
+        }
+      },
+      {
+        name: "火星",
+        icon: "🔴",
+        radius: 1.0,
+        distance: 25,
+        color: 0xef5350,
+        speed: 0.018,
+        rotationSpeed: 0.018,
+        info: {
+          distance: "1.52 AU",
+          period: "687天",
+          temp: "-65°C",
+          desc: "红色星球,人类探索的下一个目标"
+        }
+      },
+      {
+        name: "木星",
+        icon: "🟤",
+        radius: 3.5,
+        distance: 35,
+        color: 0xffb74d,
+        speed: 0.008,
+        rotationSpeed: 0.04,
+        info: {
+          distance: "5.2 AU",
+          period: "11.86年",
+          temp: "-110°C",
+          desc: "太阳系最大的行星,气态巨行星"
+        }
+      },
+      {
+        name: "土星",
+        icon: "🪐",
+        radius: 3.0,
+        distance: 45,
+        color: 0xffe082,
+        speed: 0.006,
+        rotationSpeed: 0.038,
+        info: {
+          distance: "9.5 AU",
+          period: "29.46年",
+          temp: "-140°C",
+          desc: "拥有壮观环系统的气态巨行星"
+        }
+      }
+    ];
+
+    // 全局变量
+    let scene, camera, renderer, controls;
+    let planets = [];
+    let orbits = [];
+    let animationSpeed = 1;
+    let isPaused = false;
+    let showOrbits = true;
+    let raycaster, mouse;
+    let selectedPlanet = null;
+
+    // 初始化场景
+    function init() {
+      // 场景
+      scene = new THREE.Scene();
+
+      // 相机
+      camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      camera.position.set(0, 40, 60);
+
+      // 渲染器
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+      // 控制器
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.minDistance = 20;
+      controls.maxDistance = 150;
+
+      // 环境光
+      const ambientLight = new THREE.AmbientLight(0x333333);
+      scene.add(ambientLight);
+
+      // 创建星空背景
+      createStarfield();
+
+      // 创建行星
+      createPlanets();
+
+      // 射线检测器
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      // 事件监听
+      window.addEventListener('resize', onWindowResize);
+      renderer.domElement.addEventListener('click', onMouseClick);
+      renderer.domElement.addEventListener('mousemove', onMouseMove);
+
+      // 开始动画
+      animate();
+    }
+
+    // 创建星空背景
+    function createStarfield() {
+      const starsGeometry = new THREE.BufferGeometry();
+      const starsMaterial = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.5,
+        transparent: true,
+        opacity: 0.8
+      });
+
+      const starsVertices = [];
+      for (let i = 0; i < 3000; i++) {
+        const x = (Math.random() - 0.5) * 400;
+        const y = (Math.random() - 0.5) * 400;
+        const z = (Math.random() - 0.5) * 400;
+        starsVertices.push(x, y, z);
+      }
+
+      starsGeometry.setAttribute('position',
+        new THREE.Float32BufferAttribute(starsVertices, 3));
+
+      const stars = new THREE.Points(starsGeometry, starsMaterial);
+      scene.add(stars);
+    }
+
+    // 创建行星
+    function createPlanets() {
+      planetsData.forEach((data, index) => {
+        // 行星几何体
+        const geometry = new THREE.SphereGeometry(data.radius, 32, 32);
+
+        // 太阳使用发光材质
+        let material;
+        if (data.distance === 0) {
+          material = new THREE.MeshBasicMaterial({
+            color: data.color,
+          });
+
+          // 太阳光源
+          const sunLight = new THREE.PointLight(0xffffff, 2, 200);
+          sunLight.position.set(0, 0, 0);
+          scene.add(sunLight);
+        } else {
+          material = new THREE.MeshStandardMaterial({
+            color: data.color,
+            roughness: 0.8,
+            metalness: 0.2
+          });
+        }
+
+        const planet = new THREE.Mesh(geometry, material);
+        planet.userData = { ...data, index };
+
+        // 初始位置
+        const angle = Math.random() * Math.PI * 2;
+        planet.position.x = Math.cos(angle) * data.distance;
+        planet.position.z = Math.sin(angle) * data.distance;
+
+        scene.add(planet);
+        planets.push({
+          mesh: planet,
+          data: data,
+          angle: angle
+        });
+
+        // 创建轨道线
+        if (data.distance > 0) {
+          const orbitGeometry = new THREE.RingGeometry(
+            data.distance - 0.1,
+            data.distance + 0.1,
+            64
+          );
+          const orbitMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.15,
+            side: THREE.DoubleSide
+          });
+          const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+          orbit.rotation.x = Math.PI / 2;
+          scene.add(orbit);
+          orbits.push(orbit);
+        }
+      });
+    }
+
+    // 动画循环
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // 更新行星位置
+      if (!isPaused) {
+        planets.forEach(planet => {
+          if (planet.data.distance > 0) {
+            planet.angle += planet.data.speed * animationSpeed * 0.01;
+            planet.mesh.position.x = Math.cos(planet.angle) * planet.data.distance;
+            planet.mesh.position.z = Math.sin(planet.angle) * planet.data.distance;
+          }
+          planet.mesh.rotation.y += planet.data.rotationSpeed;
+        });
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // 窗口大小调整
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // 鼠标点击
+    function onMouseClick(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+
+      if (intersects.length > 0) {
+        const planet = intersects[0].object;
+        showPlanetInfo(planet.userData);
+      }
+    }
+
+    // 鼠标移动 (悬停效果)
+    function onMouseMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+
+      if (intersects.length > 0) {
+        renderer.domElement.style.cursor = 'pointer';
+      } else {
+        renderer.domElement.style.cursor = 'default';
+      }
+    }
+
+    // 显示行星信息
+    function showPlanetInfo(data) {
+      document.getElementById('planet-icon').textContent = data.icon;
+      document.getElementById('planet-name').innerHTML =
+        `<span id="planet-icon">${data.icon}</span> ${data.name}`;
+      document.getElementById('planet-distance').textContent = data.info.distance;
+      document.getElementById('planet-period').textContent = data.info.period;
+      document.getElementById('planet-temp').textContent = data.info.temp;
+      document.getElementById('planet-desc').textContent = data.info.desc;
+
+      document.getElementById('info-panel').classList.add('visible');
+
+      // 相机聚焦
+      focusOnPlanet(data);
+    }
+
+    // 相机聚焦
+    function focusOnPlanet(data) {
+      const targetPosition = new THREE.Vector3(
+        planets[data.index].mesh.position.x,
+        planets[data.index].mesh.position.y,
+        planets[data.index].mesh.position.z
+      );
+
+      const cameraOffset = data.radius * 5 + 10;
+      const newCameraPosition = new THREE.Vector3(
+        targetPosition.x + cameraOffset,
+        targetPosition.y + cameraOffset * 0.5,
+        targetPosition.z + cameraOffset
+      );
+
+      // 平滑过渡
+      const startPosition = camera.position.clone();
+      const startTarget = controls.target.clone();
+      const duration = 1000;
+      const startTime = Date.now();
+
+      function animateCamera() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // 缓动函数
+        const eased = 1 - Math.pow(1 - progress, 3);
+
+        camera.position.lerpVectors(startPosition, newCameraPosition, eased);
+        controls.target.lerpVectors(startTarget, targetPosition, eased);
+
+        if (progress < 1) {
+          requestAnimationFrame(animateCamera);
+        }
+      }
+
+      animateCamera();
+    }
+
+    // 关闭信息面板
+    function closeInfoPanel() {
+      document.getElementById('info-panel').classList.remove('visible');
+    }
+
+    // 暂停/播放
+    function togglePause() {
+      isPaused = !isPaused;
+      const btn = document.getElementById('btn-pause');
+      btn.textContent = isPaused ? '▶️' : '⏸';
+      btn.classList.toggle('active', isPaused);
+    }
+
+    // 改变速度
+    function changeSpeed(factor) {
+      if (factor > 1) {
+        animationSpeed = Math.min(animationSpeed * factor, 8);
+      } else {
+        animationSpeed = Math.max(animationSpeed * factor, 0.25);
+      }
+      document.getElementById('speed-indicator').textContent =
+        `速度: ${animationSpeed.toFixed(1)}x`;
+    }
+
+    // 切换轨道显示
+    function toggleOrbits() {
+      showOrbits = !showOrbits;
+      orbits.forEach(orbit => {
+        orbit.visible = showOrbits;
+      });
+      document.getElementById('btn-orbit').classList.toggle('active', !showOrbits);
+    }
+
+    // 重置相机
+    function resetCamera() {
+      camera.position.set(0, 40, 60);
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+
+    // 初始化
+    init();
+  </script>
+</body>
+</html>

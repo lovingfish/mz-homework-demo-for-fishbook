@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 梗图展示</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI 梗图展示</h1>
+            <p>期末作业</p>
+        </div>
+
+        <div class="gallery-container">
+            <div class="gallery-wrapper">
+                <div class="gallery-slide" id="gallerySlide">
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/12/gemini" alt="Gemini">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/11/claude" alt="Claude">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/11/lapwing-codex" alt="Codex">
+                    </div>
+                    <div class="gallery-item">
+                        <img src="https://media.makomako.dpdns.org/images/2025/11/DeepSeek" alt="DeepSeek">
+                    </div>
+                </div>
+
+                <button class="nav-button prev" id="prevBtn">‹</button>
+                <button class="nav-button next" id="nextBtn">›</button>
+            </div>
+
+            <div class="gallery-footer">
+                <div class="image-info">
+                    <div class="image-title" id="imageTitle">Gemini</div>
+                    <div class="image-counter"><span id="currentIndex">1</span> / <span id="totalImages">4</span></div>
+                </div>
+                <div class="indicators" id="indicators"></div>
+                <div class="hint">← → 或滑动</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
